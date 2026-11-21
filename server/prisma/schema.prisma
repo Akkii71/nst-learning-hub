@@ -1,0 +1,164 @@
+// This is the Prisma schema for NST Learning Hub backend.
+// It defines the database structure using PostgreSQL.
+// Run `npx prisma migrate dev` to apply changes after editing.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// A registered user of NST Learning Hub.
+// Role is either STUDENT or REVIEWER.
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  studentId   String?      @unique  // NST student ID
+  role        Role         @default(STUDENT)
+  department  String?
+  year        String?
+  createdAt   DateTime     @default(now())
+
+  submissions Submission[]
+  ratings     Rating[]
+  feedbacks   Feedback[]
+}
+
+enum Role {
+  STUDENT
+  REVIEWER
+}
+
+// An academic subject (e.g. Mathematics, Computer Science)
+model Subject {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  code      String    @unique   // e.g. MATH, CS
+  createdAt DateTime  @default(now())
+
+  topics    Topic[]
+  resources Resource[]
+}
+
+// A topic within a subject (e.g. Calculus under Mathematics)
+model Topic {
+  id        Int       @id @default(autoincrement())
+  name      String
+  subjectId Int
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  createdAt DateTime  @default(now())
+
+  resources Resource[]
+
+  @@unique([subjectId, name])
+}
+
+// A learning resource (video, notes, tutorial, etc.)
+model Resource {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String
+  url         String
+  type        ResourceType
+  status      ResourceStatus @default(PENDING)
+
+  subjectId   Int
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+
+  topicId     Int
+  topic       Topic          @relation(fields: [topicId], references: [id])
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  submission  Submission?
+  ratings     Rating[]
+  feedbacks   Feedback[]
+}
+
+enum ResourceType {
+  VIDEO
+  NOTES
+  TUTORIAL
+  EXTERNAL
+}
+
+enum ResourceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// A student's submission linking them to a resource they proposed.
+model Submission {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  user       User             @relation(fields: [userId], references: [id])
+
+  resourceId Int              @unique
+  resource   Resource         @relation(fields: [resourceId], references: [id])
+
+  status     SubmissionStatus @default(PENDING)
+  note       String?          // Reviewer's note on approval/rejection
+  createdAt  DateTime         @default(now())
+  reviewedAt DateTime?
+
+  reviews    Review[]
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CORRECTION_REQUESTED
+}
+
+// A reviewer's action on a submission.
+model Review {
+  id           Int          @id @default(autoincrement())
+  submissionId Int
+  submission   Submission   @relation(fields: [submissionId], references: [id])
+
+  reviewerId   Int          // References a User with REVIEWER role
+  action       ReviewAction
+  note         String?
+  createdAt    DateTime     @default(now())
+}
+
+enum ReviewAction {
+  APPROVED
+  REJECTED
+  CORRECTION_REQUESTED
+}
+
+// A student's star rating on an approved resource (1–5).
+model Rating {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+
+  resourceId Int
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  stars      Int      // 1 to 5
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, resourceId])  // One rating per user per resource
+}
+
+// A text feedback comment on a resource.
+model Feedback {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+
+  resourceId Int
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  comment    String
+  createdAt  DateTime @default(now())
+}
