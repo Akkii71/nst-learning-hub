@@ -1,38 +1,53 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Alert,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
+import RatingStars from '../components/RatingStars';
 
 function getTypeIcon(type) {
   switch (type) {
-    case 'video':     return 'play-circle';
-    case 'notes':     return 'document-text';
-    case 'tutorial':  return 'school';
-    default:          return 'link';
+    case 'video':
+      return 'play-circle';
+    case 'notes':
+      return 'document-text';
+    case 'tutorial':
+      return 'school';
+    default:
+      return 'link';
   }
 }
 
 export default function ResourceDetailsScreen({ route, navigation }) {
   const { resource } = route.params;
   const [userRating, setUserRating] = useState(0);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [rated, setRated] = useState(false);
 
   async function handleOpenLink() {
+    if (!resource.url) {
+      Alert.alert('Error', 'Resource URL is missing.');
+      return;
+    }
     const supported = await Linking.canOpenURL(resource.url);
     if (supported) {
-      Linking.openURL(resource.url);
+      await Linking.openURL(resource.url);
     } else {
-      Alert.alert('Error', 'Cannot open this link.');
+      Alert.alert('Cannot Open URL', `Unable to open: ${resource.url}`);
     }
   }
 
-  function handleRating(star) {
-    setUserRating(star);
-    Alert.alert('Thank you!', `You rated this resource ${star} star${star > 1 ? 's' : ''}.`);
-    setFeedbackSubmitted(true);
+  function handleRate(stars) {
+    setUserRating(stars);
+    setRated(true);
+    Alert.alert('Rating Submitted', `You rated this resource ${stars} star${stars > 1 ? 's' : ''}. Thank you!`);
   }
 
   return (
@@ -47,11 +62,10 @@ export default function ResourceDetailsScreen({ route, navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
         {/* Type Badge */}
         <View style={styles.typeRow}>
           <Ionicons name={getTypeIcon(resource.type)} size={20} color={colors.primary} />
-          <Text style={styles.typeText}>{resource.type.toUpperCase()}</Text>
+          <Text style={styles.typeText}>{(resource.type || 'RESOURCE').toUpperCase()}</Text>
         </View>
 
         {/* Title */}
@@ -59,80 +73,78 @@ export default function ResourceDetailsScreen({ route, navigation }) {
 
         {/* Subject and Topic Tags */}
         <View style={styles.tagsRow}>
-          <View style={styles.tag}>
-            <Ionicons name="book-outline" size={12} color={colors.primary} />
-            <Text style={styles.tagText}>{resource.subject}</Text>
-          </View>
-          <View style={styles.tag}>
-            <Ionicons name="pricetag-outline" size={12} color={colors.primary} />
-            <Text style={styles.tagText}>{resource.topic}</Text>
-          </View>
+          {resource.subject ? (
+            <View style={styles.tag}>
+              <Ionicons name="book-outline" size={12} color={colors.primary} />
+              <Text style={styles.tagText}>{resource.subject}</Text>
+            </View>
+          ) : null}
+          {resource.topic ? (
+            <View style={styles.tag}>
+              <Ionicons name="pricetag-outline" size={12} color={colors.primary} />
+              <Text style={styles.tagText}>{resource.topic}</Text>
+            </View>
+          ) : null}
         </View>
 
-        {/* Rating Summary */}
+        {/* Rating Summary Card */}
         <View style={styles.ratingCard}>
           <View style={styles.ratingLeft}>
-            <Text style={styles.ratingBig}>{resource.rating.toFixed(1)}</Text>
+            <Text style={styles.ratingBig}>{(resource.rating || 0).toFixed(1)}</Text>
             <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons
-                  key={star}
-                  name={star <= Math.round(resource.rating) ? 'star' : 'star-outline'}
-                  size={14}
-                  color="#F59E0B"
-                />
-              ))}
+              <RatingStars rating={resource.rating || 0} size={14} />
             </View>
-            <Text style={styles.ratingCount}>{resource.ratingCount} ratings</Text>
+            <Text style={styles.ratingCount}>
+              {resource.ratingCount || 0} rating{(resource.ratingCount || 0) === 1 ? '' : 's'}
+            </Text>
           </View>
           <View style={styles.ratingDivider} />
           <View style={styles.ratingRight}>
             <Text style={styles.ratingRightLabel}>Submitted by</Text>
-            <Text style={styles.ratingRightValue}>{resource.submittedBy}</Text>
-            <Text style={styles.ratingRightLabel}>Added on</Text>
-            <Text style={styles.ratingRightValue}>{resource.createdAt}</Text>
+            <Text style={styles.ratingRightValue}>{resource.submittedBy || 'NST Student'}</Text>
+            <Text style={styles.ratingRightLabel}>Added date</Text>
+            <Text style={styles.ratingRightValue}>{resource.createdAt || 'Recent'}</Text>
           </View>
         </View>
 
-        {/* Description */}
+        {/* Description Section */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>About this resource</Text>
-          <Text style={styles.description}>{resource.description}</Text>
+          <Text style={styles.description}>
+            {resource.description || 'No description provided for this resource.'}
+          </Text>
+        </View>
+
+        {/* External Link Section */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Resource Link</Text>
+          <Text style={styles.urlText} numberOfLines={1}>
+            {resource.url}
+          </Text>
         </View>
 
         {/* Open Resource Button */}
         <TouchableOpacity style={styles.openButton} onPress={handleOpenLink}>
           <Ionicons name="open-outline" size={18} color={colors.white} />
-          <Text style={styles.openButtonText}>Open Resource</Text>
+          <Text style={styles.openButtonText}>Open Learning Resource</Text>
         </TouchableOpacity>
 
-        {/* Rate this Resource */}
-        {!feedbackSubmitted && (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Rate this resource</Text>
-            <Text style={styles.cardSubLabel}>How helpful was this resource?</Text>
-            <View style={styles.rateStarsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => handleRating(star)}>
-                  <Ionicons
-                    name={star <= userRating ? 'star' : 'star-outline'}
-                    size={36}
-                    color="#F59E0B"
-                    style={styles.rateStar}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
+        {/* Interactive Rating Component */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Rate this resource</Text>
+          <Text style={styles.cardSubLabel}>
+            {rated
+              ? `You rated this ${userRating} star${userRating > 1 ? 's' : ''}`
+              : 'Help fellow NST students discover quality materials:'}
+          </Text>
+          <View style={styles.ratingInteractive}>
+            <RatingStars
+              rating={userRating}
+              size={32}
+              onRate={handleRate}
+            />
           </View>
-        )}
-
-        {feedbackSubmitted && (
-          <View style={[styles.card, styles.thankYouCard]}>
-            <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-            <Text style={styles.thankYouText}>Thank you for your feedback!</Text>
-          </View>
-        )}
-
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -185,20 +197,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
   ratingLeft: { flex: 1, alignItems: 'center' },
   ratingBig: { fontSize: 36, fontWeight: '700', color: colors.textPrimary },
-  starsRow: { flexDirection: 'row', gap: 2, marginVertical: 4 },
+  starsRow: { marginVertical: 4 },
   ratingCount: { fontSize: 11, color: colors.textSecondary },
   ratingDivider: { width: 1, height: 60, backgroundColor: colors.border, marginHorizontal: 16 },
-  ratingRight: { flex: 2 },
-  ratingRightLabel: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
-  ratingRightValue: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+  ratingRight: { flex: 1 },
+  ratingRightLabel: { fontSize: 11, color: colors.textSecondary, marginBottom: 1 },
+  ratingRightValue: { fontSize: 13, color: colors.textPrimary, fontWeight: '600', marginBottom: 8 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -207,24 +219,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cardLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  cardSubLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 12,
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
+  cardLabel: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 6 },
+  cardSubLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 12 },
+  description: { fontSize: 14, color: colors.textSecondary, lineHeight: 22 },
+  urlText: { fontSize: 13, color: colors.primary },
   openButton: {
     backgroundColor: colors.primary,
     flexDirection: 'row',
@@ -235,27 +233,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
   },
-  openButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.white,
-  },
-  rateStarsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  rateStar: { marginHorizontal: 2 },
-  thankYouCard: {
-    flexDirection: 'row',
+  openButtonText: { fontSize: 16, fontWeight: '700', color: colors.white },
+  ratingInteractive: {
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#F0FDF4',
-    borderColor: colors.success,
-  },
-  thankYouText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.success,
+    paddingVertical: 8,
   },
 });

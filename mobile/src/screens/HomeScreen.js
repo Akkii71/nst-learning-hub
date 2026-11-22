@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,17 +13,39 @@ import colors from '../styles/colors';
 import SearchBar from '../components/SearchBar';
 import ResourceCard from '../components/ResourceCard';
 import SubjectCard from '../components/SubjectCard';
-import {
-  subjects, resources, getPopularResources, getRecentResources,
-} from '../data/sampleData';
+import api from '../services/api';
 
 export default function HomeScreen({ navigation }) {
+  const [subjects, setSubjects] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const popularResources = getPopularResources(3);
-  const recentResources = getRecentResources(3);
+  // Fetch subjects and resources from the backend
+  async function loadData() {
+    try {
+      setLoading(true);
+      setError(null);
+      const [fetchedSubjects, fetchedResources] = await Promise.all([
+        api.getSubjects(),
+        api.getResources(),
+      ]);
+      setSubjects(fetchedSubjects);
+      setResources(fetchedResources);
+    } catch (err) {
+      console.error('Failed to load home data:', err);
+      setError('Unable to connect to server. Please check your network.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  // Filter all resources based on search query
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filter resources based on search query
   const searchResults = searchQuery.trim().length > 0
     ? resources.filter(
         (r) =>
@@ -27,6 +54,16 @@ export default function HomeScreen({ navigation }) {
           r.topic.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : [];
+
+  // Popular resources (highest rating)
+  const popularResources = [...resources]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
+
+  // Recently added resources
+  const recentResources = [...resources]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 3);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,12 +74,11 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.brandTagline}>Discover. Learn. Succeed.</Text>
         </View>
         <View style={styles.headerIcon}>
-          <Ionicons name="school" size={28} color={colors.white} />
+          <Ionicons name="school" size={26} color={colors.white} />
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
         {/* Search Bar */}
         <View style={styles.searchSection}>
           <SearchBar
@@ -52,8 +88,27 @@ export default function HomeScreen({ navigation }) {
           />
         </View>
 
+        {/* Loading Indicator */}
+        {loading && (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading learning resources...</Text>
+          </View>
+        )}
+
+        {/* Error State with Retry Button */}
+        {!loading && error && (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle-outline" size={24} color={colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Search Results */}
-        {searchQuery.trim().length > 0 && (
+        {!loading && !error && searchQuery.trim().length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Search Results ({searchResults.length})</Text>
             {searchResults.length === 0 ? (
@@ -70,13 +125,13 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-        {/* Show main content when not searching */}
-        {searchQuery.trim().length === 0 && (
+        {/* Main Content when not searching */}
+        {!loading && !error && searchQuery.trim().length === 0 && (
           <>
             {/* Subject Categories */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Subjects</Text>
+                <Text style={styles.sectionTitle}>Academic Subjects</Text>
                 <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Explore')}>
                   <Text style={styles.seeAll}>See All</Text>
                 </TouchableOpacity>
@@ -97,13 +152,17 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>⭐ Popular Resources</Text>
               </View>
-              {popularResources.map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  resource={resource}
-                  onPress={() => navigation.navigate('ResourceDetails', { resource })}
-                />
-              ))}
+              {popularResources.length === 0 ? (
+                <Text style={styles.emptyText}>No resources available yet.</Text>
+              ) : (
+                popularResources.map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    onPress={() => navigation.navigate('ResourceDetails', { resource })}
+                  />
+                ))
+              )}
             </View>
 
             {/* Recently Added */}
@@ -111,13 +170,17 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>🕐 Recently Added</Text>
               </View>
-              {recentResources.map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  resource={resource}
-                  onPress={() => navigation.navigate('ResourceDetails', { resource })}
-                />
-              ))}
+              {recentResources.length === 0 ? (
+                <Text style={styles.emptyText}>No recent resources.</Text>
+              ) : (
+                recentResources.map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    onPress={() => navigation.navigate('ResourceDetails', { resource })}
+                  />
+                ))
+              )}
             </View>
           </>
         )}
@@ -174,10 +237,45 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  errorBox: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 10,
+    alignItems: 'center',
+    gap: 8,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  retryButtonText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '600',
+  },
   emptyText: {
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: 20,
+    paddingVertical: 12,
   },
 });

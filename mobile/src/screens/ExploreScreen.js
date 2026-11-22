@@ -1,56 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 import SearchBar from '../components/SearchBar';
 import ResourceCard from '../components/ResourceCard';
-import {
-  subjects, getTopicsBySubject, getResourcesBySubject,
-} from '../data/sampleData';
+import api from '../services/api';
 
 const RESOURCE_TYPES = ['All', 'video', 'notes', 'tutorial'];
 
 export default function ExploreScreen({ navigation }) {
+  const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [topics, setTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [resources, setResources] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [loadingResources, setLoadingResources] = useState(false);
+  const [error, setError] = useState(null);
 
-  const topics = selectedSubject ? getTopicsBySubject(selectedSubject.id) : [];
-  let displayedResources = selectedSubject ? getResourcesBySubject(selectedSubject.id) : [];
+  // 1. Fetch available subjects on mount
+  useEffect(() => {
+    async function fetchSubjects() {
+      try {
+        setLoadingSubjects(true);
+        const data = await api.getSubjects();
+        setSubjects(data);
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+        setError('Failed to load subjects from backend.');
+      } finally {
+        setLoadingSubjects(false);
+      }
+    }
+    fetchSubjects();
+  }, []);
 
-  // Filter by topic
-  if (selectedTopic) {
-    displayedResources = displayedResources.filter((r) => r.topicId === selectedTopic.id);
-  }
+  // 2. Fetch topics when subject changes
+  useEffect(() => {
+    if (!selectedSubject) {
+      setTopics([]);
+      setSelectedTopic(null);
+      setResources([]);
+      return;
+    }
 
-  // Filter by type
-  if (selectedType !== 'All') {
-    displayedResources = displayedResources.filter((r) => r.type === selectedType);
-  }
+    async function fetchTopicsAndResources() {
+      try {
+        setLoadingResources(true);
+        const [fetchedTopics, fetchedResources] = await Promise.all([
+          api.getTopics(selectedSubject.id),
+          api.getResources({ subjectId: selectedSubject.id }),
+        ]);
+        setTopics(fetchedTopics);
+        setSelectedTopic(null);
+        setResources(fetchedResources);
+      } catch (err) {
+        console.error('Error fetching topics/resources:', err);
+      } finally {
+        setLoadingResources(false);
+      }
+    }
 
-  // Filter by search
-  if (searchQuery.trim()) {
-    displayedResources = displayedResources.filter(
-      (r) =>
-        r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.topic.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }
+    fetchTopicsAndResources();
+  }, [selectedSubject]);
+
+  // 3. Fetch resources when topic or type changes
+  useEffect(() => {
+    if (!selectedSubject) return;
+
+    async function filterResources() {
+      try {
+        setLoadingResources(true);
+        const data = await api.getResources({
+          subjectId: selectedSubject.id,
+          topicId: selectedTopic ? selectedTopic.id : undefined,
+          type: selectedType !== 'All' ? selectedType : undefined,
+          search: searchQuery.trim() || undefined,
+        });
+        setResources(data);
+      } catch (err) {
+        console.error('Error filtering resources:', err);
+      } finally {
+        setLoadingResources(false);
+      }
+    }
+
+    filterResources();
+  }, [selectedTopic, selectedType, searchQuery]);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore</Text>
-        <Text style={styles.headerSubtitle}>Browse by subject and topic</Text>
+        <Text style={styles.headerTitle}>Explore Syllabus</Text>
+        <Text style={styles.headerSubtitle}>Discover resources by subject and topic</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Search */}
         <View style={styles.searchSection}>
           <SearchBar
@@ -60,43 +116,46 @@ export default function ExploreScreen({ navigation }) {
           />
         </View>
 
-        {/* Subject Selection */}
+        {/* Subjects selection chips */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>SELECT SUBJECT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            {subjects.map((subject) => {
-              const isActive = selectedSubject?.id === subject.id;
-              return (
-                <TouchableOpacity
-                  key={subject.id}
-                  style={[
-                    styles.subjectChip,
-                    isActive && { backgroundColor: subject.color },
-                  ]}
-                  onPress={() => {
-                    setSelectedSubject(isActive ? null : subject);
-                    setSelectedTopic(null);
-                    setSelectedType('All');
-                  }}
-                >
-                  <Ionicons
-                    name={subject.icon}
-                    size={16}
-                    color={isActive ? colors.white : subject.color}
-                  />
-                  <Text style={[styles.chipText, isActive && { color: colors.white }]}>
-                    {subject.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {loadingSubjects ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+              {subjects.map((subject) => {
+                const isActive = selectedSubject?.id === subject.id;
+                return (
+                  <TouchableOpacity
+                    key={subject.id}
+                    style={[
+                      styles.subjectChip,
+                      isActive && { backgroundColor: subject.color || colors.primary },
+                    ]}
+                    onPress={() => {
+                      setSelectedSubject(isActive ? null : subject);
+                      setSelectedType('All');
+                    }}
+                  >
+                    <Ionicons
+                      name={subject.icon || 'book-outline'}
+                      size={16}
+                      color={isActive ? colors.white : subject.color || colors.primary}
+                    />
+                    <Text style={[styles.chipText, isActive && { color: colors.white }]}>
+                      {subject.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
 
-        {/* Topics (shown when subject is selected) */}
+        {/* Topic selection chips (when subject is selected) */}
         {selectedSubject && topics.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>TOPIC</Text>
+            <Text style={styles.sectionLabel}>SYLLABUS TOPIC</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
               <TouchableOpacity
                 style={[styles.topicChip, !selectedTopic && styles.topicChipActive]}
@@ -124,10 +183,10 @@ export default function ExploreScreen({ navigation }) {
           </View>
         )}
 
-        {/* Type Filter (shown when subject is selected) */}
+        {/* Type Filter chips */}
         {selectedSubject && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>TYPE</Text>
+            <Text style={styles.sectionLabel}>RESOURCE TYPE</Text>
             <View style={styles.typeFilters}>
               {RESOURCE_TYPES.map((type) => (
                 <TouchableOpacity
@@ -144,18 +203,27 @@ export default function ExploreScreen({ navigation }) {
           </View>
         )}
 
-        {/* Resources */}
+        {/* Resource List / State displays */}
         <View style={styles.section}>
           {!selectedSubject && (
             <View style={styles.promptContainer}>
               <Ionicons name="compass-outline" size={48} color={colors.border} />
-              <Text style={styles.promptText}>Select a subject above to browse resources</Text>
+              <Text style={styles.promptText}>Select a subject above to explore syllabus resources</Text>
             </View>
           )}
-          {selectedSubject && displayedResources.length === 0 && (
-            <Text style={styles.emptyText}>No resources found with these filters.</Text>
+
+          {selectedSubject && loadingResources && (
+            <View style={styles.promptContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.promptText}>Fetching resources...</Text>
+            </View>
           )}
-          {displayedResources.map((resource) => (
+
+          {selectedSubject && !loadingResources && resources.length === 0 && (
+            <Text style={styles.emptyText}>No learning resources match the selected criteria.</Text>
+          )}
+
+          {selectedSubject && !loadingResources && resources.map((resource) => (
             <ResourceCard
               key={resource.id}
               resource={resource}
@@ -163,7 +231,6 @@ export default function ExploreScreen({ navigation }) {
             />
           ))}
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

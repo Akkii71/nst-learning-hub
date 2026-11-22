@@ -1,33 +1,133 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, Alert,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
-import { subjects } from '../data/sampleData';
+import api from '../services/api';
 
 const RESOURCE_TYPES = [
   { label: 'Video', value: 'video', icon: 'play-circle-outline' },
   { label: 'Notes', value: 'notes', icon: 'document-text-outline' },
   { label: 'Tutorial', value: 'tutorial', icon: 'school-outline' },
-  { label: 'Other', value: 'other', icon: 'link-outline' },
+  { label: 'External Link', value: 'external', icon: 'link-outline' },
 ];
 
 export default function SubmitScreen() {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedType, setSelectedType] = useState('notes');
+
+  const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
+
+  const [topics, setTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [loadingTopics, setLoadingTopics] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit() {
-    if (!title.trim() || !url.trim() || !selectedSubject || !selectedType) {
-      Alert.alert('Missing Fields', 'Please fill in all required fields: title, URL, subject, and type.');
+  // 1. Fetch available subjects from the backend
+  useEffect(() => {
+    async function fetchSubjects() {
+      try {
+        setLoadingSubjects(true);
+        const data = await api.getSubjects();
+        setSubjects(data);
+      } catch (err) {
+        console.error('Failed to load subjects for submit:', err);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    }
+    fetchSubjects();
+  }, []);
+
+  // 2. Fetch topics when subject selection changes
+  useEffect(() => {
+    if (!selectedSubject) {
+      setTopics([]);
+      setSelectedTopic(null);
       return;
     }
-    setSubmitted(true);
+
+    async function fetchTopics() {
+      try {
+        setLoadingTopics(true);
+        const data = await api.getTopics(selectedSubject.id);
+        setTopics(data);
+        setSelectedTopic(null);
+      } catch (err) {
+        console.error('Failed to load topics for subject:', err);
+      } finally {
+        setLoadingTopics(false);
+      }
+    }
+    fetchTopics();
+  }, [selectedSubject]);
+
+  // Form submission handler
+  async function handleSubmit() {
+    if (!title.trim()) {
+      Alert.alert('Validation Error', 'Please enter a resource title.');
+      return;
+    }
+
+    if (!url.trim()) {
+      Alert.alert('Validation Error', 'Please enter a resource URL.');
+      return;
+    }
+
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      Alert.alert('Validation Error', 'Resource URL must start with http:// or https://');
+      return;
+    }
+
+    if (!selectedSubject) {
+      Alert.alert('Validation Error', 'Please select an academic subject.');
+      return;
+    }
+
+    if (!selectedTopic) {
+      Alert.alert('Validation Error', 'Please select a syllabus topic for this subject.');
+      return;
+    }
+
+    if (!selectedType) {
+      Alert.alert('Validation Error', 'Please select a resource type.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await api.submitResource({
+        title: title.trim(),
+        description: description.trim(),
+        url: url.trim(),
+        type: selectedType,
+        subjectId: selectedSubject.id,
+        topicId: selectedTopic.id,
+        studentName: 'Akash Kumar',
+      });
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Submission failed:', err);
+      Alert.alert('Submission Failed', err.message || 'Unable to submit resource to server.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleReset() {
@@ -35,7 +135,8 @@ export default function SubmitScreen() {
     setUrl('');
     setDescription('');
     setSelectedSubject(null);
-    setSelectedType(null);
+    setSelectedTopic(null);
+    setSelectedType('notes');
     setSubmitted(false);
   }
 
@@ -48,12 +149,12 @@ export default function SubmitScreen() {
         </View>
         <View style={styles.successContainer}>
           <Ionicons name="checkmark-circle" size={72} color={colors.success} />
-          <Text style={styles.successTitle}>Submitted!</Text>
+          <Text style={styles.successTitle}>Submitted Successfully!</Text>
           <Text style={styles.successSubtitle}>
-            Your resource has been submitted for review. It will appear on the app once approved.
+            Your learning resource has been recorded in the database with a pending review status. Once verified by an NST reviewer, it will be visible to all students.
           </Text>
           <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-            <Text style={styles.resetButtonText}>Submit Another</Text>
+            <Text style={styles.resetButtonText}>Submit Another Resource</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -64,11 +165,10 @@ export default function SubmitScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Submit Resource</Text>
-        <Text style={styles.headerSubtitle}>Share a learning resource with NST students</Text>
+        <Text style={styles.headerSubtitle}>Share a syllabus resource with fellow NST students</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
         {/* Title */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Resource Title *</Text>
@@ -76,7 +176,7 @@ export default function SubmitScreen() {
             style={styles.input}
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g. MIT OpenCourseWare — Calculus"
+            placeholder="e.g. MIT OpenCourseWare — Calculus Lectures"
             placeholderTextColor={colors.textLight}
           />
         </View>
@@ -88,32 +188,75 @@ export default function SubmitScreen() {
             style={styles.input}
             value={url}
             onChangeText={setUrl}
-            placeholder="https://..."
+            placeholder="https://youtube.com/... or https://..."
             placeholderTextColor={colors.textLight}
             keyboardType="url"
             autoCapitalize="none"
           />
         </View>
 
-        {/* Subject */}
+        {/* Subject Selection */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Subject *</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            {subjects.map((subject) => {
-              const isActive = selectedSubject?.id === subject.id;
-              return (
-                <TouchableOpacity
-                  key={subject.id}
-                  style={[styles.subjectChip, isActive && { backgroundColor: subject.color, borderColor: subject.color }]}
-                  onPress={() => setSelectedSubject(isActive ? null : subject)}
-                >
-                  <Ionicons name={subject.icon} size={15} color={isActive ? colors.white : subject.color} />
-                  <Text style={[styles.chipText, isActive && { color: colors.white }]}>{subject.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {loadingSubjects ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+              {subjects.map((subject) => {
+                const isActive = selectedSubject?.id === subject.id;
+                return (
+                  <TouchableOpacity
+                    key={subject.id}
+                    style={[
+                      styles.subjectChip,
+                      isActive && {
+                        backgroundColor: subject.color || colors.primary,
+                        borderColor: subject.color || colors.primary,
+                      },
+                    ]}
+                    onPress={() => setSelectedSubject(isActive ? null : subject)}
+                  >
+                    <Ionicons
+                      name={subject.icon || 'book-outline'}
+                      size={15}
+                      color={isActive ? colors.white : subject.color || colors.primary}
+                    />
+                    <Text style={[styles.chipText, isActive && { color: colors.white }]}>
+                      {subject.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
+
+        {/* Topic Selection */}
+        {selectedSubject && (
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Syllabus Topic *</Text>
+            {loadingTopics ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+                {topics.map((topic) => {
+                  const isActive = selectedTopic?.id === topic.id;
+                  return (
+                    <TouchableOpacity
+                      key={topic.id}
+                      style={[styles.topicChip, isActive && styles.topicChipActive]}
+                      onPress={() => setSelectedTopic(isActive ? null : topic)}
+                    >
+                      <Text style={[styles.topicChipText, isActive && styles.topicChipTextActive]}>
+                        {topic.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        )}
 
         {/* Resource Type */}
         <View style={styles.fieldGroup}>
@@ -125,14 +268,16 @@ export default function SubmitScreen() {
                 <TouchableOpacity
                   key={type.value}
                   style={[styles.typeCard, isActive && styles.typeCardActive]}
-                  onPress={() => setSelectedType(isActive ? null : type.value)}
+                  onPress={() => setSelectedType(type.value)}
                 >
                   <Ionicons
                     name={type.icon}
                     size={22}
                     color={isActive ? colors.white : colors.primary}
                   />
-                  <Text style={[styles.typeCardText, isActive && { color: colors.white }]}>{type.label}</Text>
+                  <Text style={[styles.typeCardText, isActive && { color: colors.white }]}>
+                    {type.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -146,7 +291,7 @@ export default function SubmitScreen() {
             style={[styles.input, styles.textArea]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Briefly describe what this resource covers..."
+            placeholder="Explain how this resource helps NST students understand the topic..."
             placeholderTextColor={colors.textLight}
             multiline
             numberOfLines={4}
@@ -154,20 +299,29 @@ export default function SubmitScreen() {
           />
         </View>
 
-        {/* Info Note */}
+        {/* Information box */}
         <View style={styles.infoBox}>
           <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
           <Text style={styles.infoText}>
-            Submissions are reviewed before being published. Please ensure the link is working and the content is relevant to NST syllabus.
+            Submissions are saved directly to the database and will be reviewed by NST faculty or peer reviewers before appearing publicly.
           </Text>
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Ionicons name="send-outline" size={18} color={colors.white} />
-          <Text style={styles.submitButtonText}>Submit for Review</Text>
+        <TouchableOpacity
+          style={[styles.submitButton, submitting && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <>
+              <Ionicons name="send-outline" size={18} color={colors.white} />
+              <Text style={styles.submitButtonText}>Submit Resource</Text>
+            </>
+          )}
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -222,6 +376,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.textPrimary,
   },
+  topicChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    marginRight: 8,
+  },
+  topicChipActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  topicChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textPrimary,
+  },
+  topicChipTextActive: { color: colors.white },
   typeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -250,18 +423,18 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     flexDirection: 'row',
-    gap: 10,
     backgroundColor: '#EBF4FF',
     borderRadius: 10,
-    padding: 14,
+    padding: 12,
+    gap: 8,
+    alignItems: 'center',
     marginBottom: 20,
-    alignItems: 'flex-start',
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
-    color: colors.primary,
-    lineHeight: 18,
+    fontSize: 12,
+    color: colors.primaryDark,
+    lineHeight: 17,
   },
   submitButton: {
     backgroundColor: colors.primary,
@@ -271,41 +444,38 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
+    marginTop: 6,
   },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.white,
-  },
+  submitButtonText: { fontSize: 16, fontWeight: '700', color: colors.white },
   successContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 28,
   },
   successTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.textPrimary,
     marginTop: 16,
     marginBottom: 8,
   },
   successSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
+    lineHeight: 20,
+    marginBottom: 28,
   },
   resetButton: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
   },
   resetButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
     color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
