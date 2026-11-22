@@ -27,6 +27,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Core API routes
+app.use('/api/subjects', require('./src/routes/subjects'));
+app.use('/api/topics', require('./src/routes/topics'));
+app.use('/api/resources', require('./src/routes/resources'));
+app.use('/api/submissions', require('./src/routes/submissions'));
+
+// 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
