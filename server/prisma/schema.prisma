@@ -1,6 +1,6 @@
 // This is the Prisma schema for NST Learning Hub backend.
 // It defines the database structure using PostgreSQL.
-// Run `npx prisma migrate dev` to apply changes after editing.
+// Run `npx prisma db push` or `npx prisma migrate dev` to apply changes.
 
 generator client {
   provider = "prisma-client-js"
@@ -17,7 +17,7 @@ model User {
   id          Int          @id @default(autoincrement())
   name        String
   email       String       @unique
-  studentId   String?      @unique  // NST student ID
+  studentId   String?      @unique // NST student ID
   role        Role         @default(STUDENT)
   department  String?
   year        String?
@@ -35,10 +35,12 @@ enum Role {
 
 // An academic subject (e.g. Mathematics, Computer Science)
 model Subject {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  code      String    @unique   // e.g. MATH, CS
-  createdAt DateTime  @default(now())
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  code      String     @unique // e.g. MATH, CS
+  icon      String?    // e.g. calculator-outline, laptop-outline
+  color     String?    // e.g. #1565C0
+  createdAt DateTime   @default(now())
 
   topics    Topic[]
   resources Resource[]
@@ -46,11 +48,11 @@ model Subject {
 
 // A topic within a subject (e.g. Calculus under Mathematics)
 model Topic {
-  id        Int       @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
   subjectId Int
-  subject   Subject   @relation(fields: [subjectId], references: [id])
-  createdAt DateTime  @default(now())
+  subject   Subject    @relation(fields: [subjectId], references: [id])
+  createdAt DateTime   @default(now())
 
   resources Resource[]
 
@@ -147,7 +149,7 @@ model Rating {
   stars      Int      // 1 to 5
   createdAt  DateTime @default(now())
 
-  @@unique([userId, resourceId])  // One rating per user per resource
+  @@unique([userId, resourceId]) // One rating per user per resource
 }
 
 // A text feedback comment on a resource.
