@@ -39,9 +39,11 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Start server - bind to 0.0.0.0 so physical devices on the local network (Expo Go) can connect
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`NST Learning Hub API is running:`);
+  console.log(`- Local:            http://localhost:${PORT}`);
+  console.log(`- On Your Network:  http://10.7.21.130:${PORT} (use this IP for physical phones via Expo Go)`);
 });
 
 module.exports = app;

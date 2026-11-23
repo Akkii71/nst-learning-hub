@@ -2,6 +2,7 @@
   "expo": {
     "name": "NST Learning Hub",
     "slug": "nst-learning-hub",
+    "scheme": "nstlearninghub",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",

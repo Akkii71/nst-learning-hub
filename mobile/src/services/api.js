@@ -1,15 +1,18 @@
 import { Platform } from 'react-native';
 
 // Backend API Base URL Configuration:
-// - iOS Simulator: http://localhost:5001/api
-// - Android Emulator: http://10.0.2.2:5001/api
-// - Physical device via Expo Go: Replace with your machine's LAN IP,
-//   for example: 'http://10.7.21.130:5001/api'
-export const API_BASE_URL = Platform.select({
+// 1. If EXPO_PUBLIC_API_URL is provided (e.g. from mobile/.env), use it directly.
+// 2. Otherwise, use platform-aware smart defaults:
+//    - Android Emulator: http://10.0.2.2:5001/api
+//    - iOS Simulator / Local: http://localhost:5001/api
+//    - Physical device running Expo Go on the same Wi-Fi: http://10.7.21.130:5001/api
+const DEFAULT_URL = Platform.select({
   android: 'http://10.0.2.2:5001/api',
   ios: 'http://localhost:5001/api',
-  default: 'http://localhost:5001/api',
+  default: 'http://10.7.21.130:5001/api',
 });
+
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_URL;
 
 // Active in-memory JWT authentication token
 let currentAuthToken = null;
