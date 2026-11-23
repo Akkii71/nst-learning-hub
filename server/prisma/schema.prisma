@@ -17,6 +17,7 @@ model User {
   id          Int          @id @default(autoincrement())
   name        String
   email       String       @unique
+  password    String       // Hashed password
   studentId   String?      @unique // NST student ID
   role        Role         @default(STUDENT)
   department  String?

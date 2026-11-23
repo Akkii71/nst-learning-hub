@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const RESOURCE_TYPES = [
   { label: 'Video', value: 'video', icon: 'play-circle-outline' },
@@ -22,6 +23,7 @@ const RESOURCE_TYPES = [
 ];
 
 export default function SubmitScreen() {
+  const { user, isAuthenticated } = useAuth();
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
@@ -118,7 +120,7 @@ export default function SubmitScreen() {
         type: selectedType,
         subjectId: selectedSubject.id,
         topicId: selectedTopic.id,
-        studentName: 'Akash Kumar',
+        studentName: user?.name || 'NST Student',
       });
 
       setSubmitted(true);

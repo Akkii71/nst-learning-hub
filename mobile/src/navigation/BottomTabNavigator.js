@@ -7,17 +7,19 @@ import ExploreScreen from '../screens/ExploreScreen';
 import SubmitScreen from '../screens/SubmitScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ResourceDetailsScreen from '../screens/ResourceDetailsScreen';
+import AuthScreen from '../screens/AuthScreen';
 import colors from '../styles/colors';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Home stack: Home → ResourceDetails
+// Home stack: Home → ResourceDetails, Auth
 function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="ResourceDetails" component={ResourceDetailsScreen} />
+      <Stack.Screen name="Auth" component={AuthScreen} />
     </Stack.Navigator>
   );
 }
@@ -27,6 +29,27 @@ function ExploreStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ExploreMain" component={ExploreScreen} />
+      <Stack.Screen name="ResourceDetails" component={ResourceDetailsScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Submit stack: Submit → Auth
+function SubmitStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="SubmitMain" component={SubmitScreen} />
+      <Stack.Screen name="Auth" component={AuthScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Profile stack: Profile → Auth
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="Auth" component={AuthScreen} />
       <Stack.Screen name="ResourceDetails" component={ResourceDetailsScreen} />
     </Stack.Navigator>
   );
@@ -68,8 +91,8 @@ export default function BottomTabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Explore" component={ExploreStack} />
-      <Tab.Screen name="Submit" component={SubmitScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Submit" component={SubmitStack} />
+      <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );
 }

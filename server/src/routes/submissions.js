@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../prisma');
+const { optionalAuth, authenticateToken } = require('../middleware/auth');
 
 // Allowed resource types
 const VALID_TYPES = ['VIDEO', 'NOTES', 'TUTORIAL', 'EXTERNAL'];
 
 // POST /api/submissions - Submit a new learning resource
-router.post('/', async (req, res) => {
+router.post('/', optionalAuth, async (req, res) => {
   try {
     const {
       title,
@@ -72,7 +73,9 @@ router.post('/', async (req, res) => {
 
     // 2. Identify or create the submitting student user
     let user;
-    if (userId) {
+    if (req.user) {
+      user = req.user;
+    } else if (userId) {
       user = await prisma.user.findUnique({ where: { id: parseInt(userId, 10) } });
     }
 
@@ -86,6 +89,7 @@ router.post('/', async (req, res) => {
         create: {
           name,
           email,
+          password: 'default-student-pwd',
           role: 'STUDENT',
           studentId: 'NST2024001',
           department: 'Computer Science',

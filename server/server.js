@@ -28,6 +28,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Core API routes
+app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/subjects', require('./src/routes/subjects'));
 app.use('/api/topics', require('./src/routes/topics'));
 app.use('/api/resources', require('./src/routes/resources'));

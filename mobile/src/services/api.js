@@ -11,6 +11,13 @@ export const API_BASE_URL = Platform.select({
   default: 'http://localhost:5001/api',
 });
 
+// Active in-memory JWT authentication token
+let currentAuthToken = null;
+
+export function setAuthToken(token) {
+  currentAuthToken = token;
+}
+
 // Helper for checking and parsing JSON fetch responses
 async function handleResponse(response) {
   if (!response.ok) {
@@ -20,26 +27,65 @@ async function handleResponse(response) {
   return response.json();
 }
 
+// Helper to construct headers with optional JWT
+function getHeaders(extraHeaders = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...extraHeaders,
+  };
+  if (currentAuthToken) {
+    headers['Authorization'] = `Bearer ${currentAuthToken}`;
+  }
+  return headers;
+}
+
 export const api = {
-  // Fetch list of all subjects
+  setAuthToken,
+
+  // --- Authentication ---
+  async login(credentials) {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    return handleResponse(res);
+  },
+
+  async register(data) {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async getMe() {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // --- Subjects ---
   async getSubjects() {
     const res = await fetch(`${API_BASE_URL}/subjects`);
     return handleResponse(res);
   },
 
-  // Fetch subject details and its syllabus topics
   async getSubjectById(id) {
     const res = await fetch(`${API_BASE_URL}/subjects/${id}`);
     return handleResponse(res);
   },
 
-  // Fetch topics for a given subject ID
+  // --- Topics ---
   async getTopics(subjectId) {
     const res = await fetch(`${API_BASE_URL}/topics/${subjectId}`);
     return handleResponse(res);
   },
 
-  // Fetch resources with optional filters (subjectId, topicId, type, search)
+  // --- Resources ---
   async getResources(params = {}) {
     const query = new URLSearchParams();
     if (params.subjectId) query.append('subjectId', params.subjectId);
@@ -53,28 +99,26 @@ export const api = {
     return handleResponse(res);
   },
 
-  // Fetch single resource details
   async getResourceById(id) {
     const res = await fetch(`${API_BASE_URL}/resources/${id}`);
     return handleResponse(res);
   },
 
-  // Submit a new learning resource
+  // --- Submissions ---
   async submitResource(data) {
     const res = await fetch(`${API_BASE_URL}/submissions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify(data),
     });
     return handleResponse(res);
   },
 
-  // Fetch student submissions
   async getSubmissions(userId) {
     const url = userId ? `${API_BASE_URL}/submissions?userId=${userId}` : `${API_BASE_URL}/submissions`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: getHeaders(),
+    });
     return handleResponse(res);
   },
 };

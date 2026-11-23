@@ -1,16 +1,21 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding NST Learning Hub database...');
 
+  // Hash a default password for seed users
+  const defaultPasswordHash = await bcrypt.hash('password123', 10);
+
   // 1. Create Default Student and Reviewer Users
   const student = await prisma.user.upsert({
     where: { email: 'student@nst.edu' },
-    update: {},
+    update: { password: defaultPasswordHash },
     create: {
       name: 'Akash Kumar',
       email: 'student@nst.edu',
+      password: defaultPasswordHash,
       studentId: 'NST2024001',
       role: 'STUDENT',
       department: 'Computer Science',
@@ -20,10 +25,11 @@ async function main() {
 
   const reviewer = await prisma.user.upsert({
     where: { email: 'reviewer@nst.edu' },
-    update: {},
+    update: { password: defaultPasswordHash },
     create: {
       name: 'Dr. Ramesh Sharma',
       email: 'reviewer@nst.edu',
+      password: defaultPasswordHash,
       studentId: 'NST-FAC-01',
       role: 'REVIEWER',
       department: 'Computer Science',
