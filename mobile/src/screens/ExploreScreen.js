@@ -16,7 +16,7 @@ import api from '../services/api';
 
 const RESOURCE_TYPES = ['All', 'video', 'notes', 'tutorial'];
 
-export default function ExploreScreen({ navigation }) {
+export default function ExploreScreen({ route, navigation }) {
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [topics, setTopics] = useState([]);
@@ -45,6 +45,13 @@ export default function ExploreScreen({ navigation }) {
     }
     fetchSubjects();
   }, []);
+
+  // Listen for subject passed from Home screen navigation
+  useEffect(() => {
+    if (route?.params?.selectedSubject) {
+      setSelectedSubject(route.params.selectedSubject);
+    }
+  }, [route?.params?.selectedSubject]);
 
   // 2. Fetch topics when subject changes
   useEffect(() => {

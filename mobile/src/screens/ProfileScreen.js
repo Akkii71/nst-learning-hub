@@ -218,7 +218,16 @@ export default function ProfileScreen({ navigation }) {
               const isApproved = sub.status === 'APPROVED';
               const isRejected = sub.status === 'REJECTED';
               return (
-                <View key={sub.id} style={styles.submissionCard}>
+                <TouchableOpacity
+                  key={sub.id}
+                  style={styles.submissionCard}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (sub.resource && sub.status === 'APPROVED') {
+                      navigation.navigate('ResourceDetails', { resource: sub.resource });
+                    }
+                  }}
+                >
                   <View style={styles.submissionTop}>
                     <View
                       style={[
@@ -278,7 +287,7 @@ export default function ProfileScreen({ navigation }) {
                       <Text style={styles.noteText}>Note: {sub.note}</Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               );
             })}
         </View>

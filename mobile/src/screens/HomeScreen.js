@@ -141,7 +141,12 @@ export default function HomeScreen({ navigation }) {
                   <SubjectCard
                     key={subject.id}
                     subject={subject}
-                    onPress={() => navigation.getParent()?.navigate('Explore')}
+                    onPress={() =>
+                      navigation.getParent()?.navigate('Explore', {
+                        screen: 'ExploreMain',
+                        params: { selectedSubject: subject },
+                      })
+                    }
                   />
                 ))}
               </View>

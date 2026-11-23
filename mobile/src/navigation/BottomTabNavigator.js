@@ -25,12 +25,13 @@ function HomeStack() {
   );
 }
 
-// Explore stack: Explore → ResourceDetails
+// Explore stack: Explore → ResourceDetails, Auth
 function ExploreStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ExploreMain" component={ExploreScreen} />
       <Stack.Screen name="ResourceDetails" component={ResourceDetailsScreen} />
+      <Stack.Screen name="Auth" component={AuthScreen} />
     </Stack.Navigator>
   );
 }

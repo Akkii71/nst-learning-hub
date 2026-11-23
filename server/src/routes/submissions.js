@@ -71,6 +71,23 @@ router.post('/', optionalAuth, async (req, res) => {
       return res.status(404).json({ error: 'Selected topic does not exist' });
     }
 
+    // Check for duplicate submission (same URL under the same syllabus topic)
+    const existingResource = await prisma.resource.findFirst({
+      where: {
+        topicId: parsedTopicId,
+        url: {
+          equals: url.trim(),
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existingResource) {
+      return res.status(400).json({
+        error: 'This resource URL has already been submitted for this topic.',
+      });
+    }
+
     // 2. Identify submitting student user
     let user;
     if (req.user) {
