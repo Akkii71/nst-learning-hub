@@ -24,6 +24,7 @@ export default function ExploreScreen({ navigation }) {
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [resources, setResources] = useState([]);
+  const [topVideos, setTopVideos] = useState([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingResources, setLoadingResources] = useState(false);
   const [error, setError] = useState(null);
@@ -81,13 +82,20 @@ export default function ExploreScreen({ navigation }) {
     async function filterResources() {
       try {
         setLoadingResources(true);
-        const data = await api.getResources({
-          subjectId: selectedSubject.id,
-          topicId: selectedTopic ? selectedTopic.id : undefined,
-          type: selectedType !== 'All' ? selectedType : undefined,
-          search: searchQuery.trim() || undefined,
-        });
+        const [data, videos] = await Promise.all([
+          api.getResources({
+            subjectId: selectedSubject.id,
+            topicId: selectedTopic ? selectedTopic.id : undefined,
+            type: selectedType !== 'All' ? selectedType : undefined,
+            search: searchQuery.trim() || undefined,
+          }),
+          api.getTopVideos({
+            subjectId: selectedSubject.id,
+            topicId: selectedTopic ? selectedTopic.id : undefined,
+          }),
+        ]);
         setResources(data);
+        setTopVideos(videos);
       } catch (err) {
         console.error('Error filtering resources:', err);
       } finally {
@@ -203,8 +211,32 @@ export default function ExploreScreen({ navigation }) {
           </View>
         )}
 
+        {/* Top 3 Eligible Video Lectures per Topic/Subject */}
+        {selectedSubject && !loadingResources && topVideos.length > 0 && selectedType === 'All' && (
+          <View style={styles.section}>
+            <View style={styles.topVideoHeader}>
+              <Ionicons name="videocam" size={16} color="#DC2626" />
+              <Text style={styles.topVideoHeaderTitle}>
+                Top 3 Video Lectures {selectedTopic ? `· ${selectedTopic.name}` : ''}
+              </Text>
+            </View>
+            {topVideos.map((video) => (
+              <ResourceCard
+                key={`top-${video.id}`}
+                resource={video}
+                onPress={() => navigation.navigate('ResourceDetails', { resource: video })}
+              />
+            ))}
+          </View>
+        )}
+
         {/* Resource List / State displays */}
         <View style={styles.section}>
+          {selectedSubject && !loadingResources && (
+            <Text style={styles.sectionLabel}>
+              {selectedType === 'All' ? 'ALL SYLLABUS RESOURCES' : `${selectedType.toUpperCase()} RESOURCES`} ({resources.length})
+            </Text>
+          )}
           {!selectedSubject && (
             <View style={styles.promptContainer}>
               <Ionicons name="compass-outline" size={48} color={colors.border} />
@@ -322,5 +354,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     paddingVertical: 24,
+  },
+  topVideoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  topVideoHeaderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#DC2626',
+    letterSpacing: 0.5,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 import RatingStars from '../components/RatingStars';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function getTypeIcon(type) {
   switch (type) {
@@ -27,9 +31,37 @@ function getTypeIcon(type) {
 }
 
 export default function ResourceDetailsScreen({ route, navigation }) {
-  const { resource } = route.params;
-  const [userRating, setUserRating] = useState(0);
-  const [rated, setRated] = useState(false);
+  const initialResource = route.params.resource;
+  const { isAuthenticated } = useAuth();
+
+  const [resource, setResource] = useState(initialResource);
+  const [loading, setLoading] = useState(true);
+  const [userRating, setUserRating] = useState(initialResource.userRating || 0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
+  // Feedback state
+  const [feedbackList, setFeedbackList] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+
+  // Fetch full details from database
+  async function loadDetails() {
+    try {
+      setLoading(true);
+      const data = await api.getResourceById(initialResource.id);
+      setResource(data);
+      if (data.userRating) setUserRating(data.userRating);
+      if (data.feedbacks) setFeedbackList(data.feedbacks);
+    } catch (err) {
+      console.error('Error loading resource details:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDetails();
+  }, [initialResource.id]);
 
   async function handleOpenLink() {
     if (!resource.url) {
@@ -44,10 +76,59 @@ export default function ResourceDetailsScreen({ route, navigation }) {
     }
   }
 
-  function handleRate(stars) {
-    setUserRating(stars);
-    setRated(true);
-    Alert.alert('Rating Submitted', `You rated this resource ${stars} star${stars > 1 ? 's' : ''}. Thank you!`);
+  // Handle rating submission to database
+  async function handleRate(stars) {
+    if (!isAuthenticated) {
+      Alert.alert('Sign In Required', 'Please sign in to rate this resource.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => navigation.navigate('Auth') },
+      ]);
+      return;
+    }
+
+    try {
+      setRatingLoading(true);
+      const res = await api.rateResource(resource.id, stars);
+      setUserRating(stars);
+      setResource((prev) => ({
+        ...prev,
+        rating: res.averageRating,
+        ratingCount: res.ratingCount,
+      }));
+      Alert.alert('Rating Submitted', `You rated this resource ${stars} star${stars > 1 ? 's' : ''}. Thank you!`);
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to submit rating.');
+    } finally {
+      setRatingLoading(false);
+    }
+  }
+
+  // Handle feedback submission to database
+  async function handleAddFeedback() {
+    if (!isAuthenticated) {
+      Alert.alert('Sign In Required', 'Please sign in to leave feedback on learning resources.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => navigation.navigate('Auth') },
+      ]);
+      return;
+    }
+
+    if (!newComment.trim()) {
+      Alert.alert('Validation Error', 'Please write a comment before posting.');
+      return;
+    }
+
+    try {
+      setFeedbackLoading(true);
+      const res = await api.submitFeedback(resource.id, newComment.trim());
+      setFeedbackList((prev) => [res.feedback, ...prev]);
+      setNewComment('');
+      Alert.alert('Thank You!', 'Your feedback has been posted for NST students.');
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to post feedback.');
+    } finally {
+      setFeedbackLoading(false);
+    }
   }
 
   return (
@@ -129,21 +210,68 @@ export default function ResourceDetailsScreen({ route, navigation }) {
           <Text style={styles.openButtonText}>Open Learning Resource</Text>
         </TouchableOpacity>
 
-        {/* Interactive Rating Component */}
+        {/* Interactive Database Rating Component */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Rate this resource</Text>
+          <Text style={styles.cardLabel}>Rate this resource (1–5 Stars)</Text>
           <Text style={styles.cardSubLabel}>
-            {rated
-              ? `You rated this ${userRating} star${userRating > 1 ? 's' : ''}`
-              : 'Help fellow NST students discover quality materials:'}
+            {userRating > 0
+              ? `Your rating: ${userRating} star${userRating > 1 ? 's' : ''} (tap to change)`
+              : 'Tap a star to submit your rating:'}
           </Text>
           <View style={styles.ratingInteractive}>
-            <RatingStars
-              rating={userRating}
-              size={32}
-              onRate={handleRate}
-            />
+            {ratingLoading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <RatingStars
+                rating={userRating}
+                size={34}
+                onRate={handleRate}
+              />
+            )}
           </View>
+        </View>
+
+        {/* Feedback & Comments Section */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Student Feedback & Reviews ({feedbackList.length})</Text>
+
+          {/* Feedback Input */}
+          <View style={styles.feedbackInputBox}>
+            <TextInput
+              style={styles.feedbackInput}
+              value={newComment}
+              onChangeText={setNewComment}
+              placeholder="Leave a review or tip for fellow NST students..."
+              placeholderTextColor={colors.textLight}
+              multiline
+            />
+            <TouchableOpacity
+              style={[styles.postButton, feedbackLoading && { opacity: 0.6 }]}
+              onPress={handleAddFeedback}
+              disabled={feedbackLoading}
+            >
+              {feedbackLoading ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={styles.postButtonText}>Post Review</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Feedback List */}
+          {feedbackList.length === 0 ? (
+            <Text style={styles.noFeedbackText}>No reviews yet. Be the first to leave feedback!</Text>
+          ) : (
+            feedbackList.map((item) => (
+              <View key={item.id} style={styles.feedbackItem}>
+                <View style={styles.feedbackHeader}>
+                  <Text style={styles.feedbackUser}>{item.user}</Text>
+                  <Text style={styles.feedbackDate}>{item.createdAt}</Text>
+                </View>
+                <Text style={styles.feedbackComment}>{item.comment}</Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -237,5 +365,63 @@ const styles = StyleSheet.create({
   ratingInteractive: {
     alignItems: 'center',
     paddingVertical: 8,
+  },
+  feedbackInputBox: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  feedbackInput: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 10,
+    fontSize: 13,
+    color: colors.textPrimary,
+    minHeight: 60,
+    marginBottom: 8,
+  },
+  postButton: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  postButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  noFeedbackText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  feedbackItem: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: 10,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  feedbackUser: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  feedbackDate: {
+    fontSize: 11,
+    color: colors.textLight,
+  },
+  feedbackComment: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });

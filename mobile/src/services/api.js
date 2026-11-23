@@ -100,7 +100,37 @@ export const api = {
   },
 
   async getResourceById(id) {
-    const res = await fetch(`${API_BASE_URL}/resources/${id}`);
+    const res = await fetch(`${API_BASE_URL}/resources/${id}`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  async getTopVideos(params = {}) {
+    const query = new URLSearchParams();
+    if (params.topicId) query.append('topicId', params.topicId);
+    if (params.subjectId) query.append('subjectId', params.subjectId);
+    const queryString = query.toString();
+    const url = queryString ? `${API_BASE_URL}/resources/top-videos?${queryString}` : `${API_BASE_URL}/resources/top-videos`;
+    const res = await fetch(url, { headers: getHeaders() });
+    return handleResponse(res);
+  },
+
+  async rateResource(id, stars) {
+    const res = await fetch(`${API_BASE_URL}/resources/${id}/rate`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ stars }),
+    });
+    return handleResponse(res);
+  },
+
+  async submitFeedback(id, comment) {
+    const res = await fetch(`${API_BASE_URL}/resources/${id}/feedback`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ comment }),
+    });
     return handleResponse(res);
   },
 
