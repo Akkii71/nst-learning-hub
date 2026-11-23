@@ -17,6 +17,20 @@ A syllabus-specific, community-powered learning platform designed for NST studen
 
 ---
 
+## 📸 Application Screenshots
+
+| Home & Subjects | Explore & Top 3 Videos | Resource Details & Ratings | Reviewer Portal |
+|---|---|---|---|
+| ![Home](docs/screenshots/01_home_screen.svg) | ![Explore](docs/screenshots/02_explore_syllabus.svg) | ![Details](docs/screenshots/03_resource_details_rating.svg) | ![Reviewer](docs/screenshots/04_reviewer_moderation.svg) |
+
+---
+
+## 📖 Live Demonstration Guide
+
+A complete step-by-step examiner demonstration script is available in [**`DEMO_GUIDE.md`**](DEMO_GUIDE.md). It walks through all student and faculty reviewer workflows in 5 minutes.
+
+---
+
 ## 🛠️ Technology Stack
 
 - **Mobile Frontend**: React Native, Expo SDK 53, React Navigation (Tabs & Stacks), AsyncStorage, Ionicons
@@ -95,6 +109,12 @@ nst-learning-hub/
    npm start
    ```
    The server will bind to `0.0.0.0:5001` so it is accessible both locally and over the Wi-Fi network.
+
+5. **(Optional) Run Automated Test Suite**:
+   ```bash
+   npm test
+   ```
+   Runs 15 automated end-to-end workflow tests covering authentication, subject/topic APIs, resource submission, reviewer approval, ratings, feedback and top-video ranking. All 15 tests must pass before deployment.
 
 ---
 

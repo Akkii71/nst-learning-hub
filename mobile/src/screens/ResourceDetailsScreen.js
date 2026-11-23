@@ -142,7 +142,11 @@ export default function ResourceDetailsScreen({ route, navigation }) {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Type Badge */}
         <View style={styles.typeRow}>
           <Ionicons name={getTypeIcon(resource.type)} size={20} color={colors.primary} />

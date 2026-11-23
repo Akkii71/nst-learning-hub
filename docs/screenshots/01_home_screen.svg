@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 640" width="360" height="640" style="background:#F5F7FA; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <!-- Phone Frame & Status Bar -->
+  <rect x="0" y="0" width="360" height="640" rx="30" fill="#F5F7FA" stroke="#E5E7EB" stroke-width="4"/>
+  
+  <!-- Header -->
+  <path d="M 0,30 Q 0,0 30,0 L 330,0 Q 360,0 360,30 L 360,80 L 0,80 Z" fill="#1565C0"/>
+  <text x="20" y="44" fill="#FFFFFF" font-size="18" font-weight="bold">NST Learning Hub</text>
+  <text x="20" y="62" fill="#BBDEFB" font-size="12">Discover. Learn. Succeed.</text>
+  <circle cx="325" cy="48" r="18" fill="rgba(255,255,255,0.2)"/>
+  <text x="318" y="54" fill="#FFFFFF" font-size="16">🎓</text>
+
+  <!-- Search Bar -->
+  <rect x="16" y="96" width="328" height="40" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="30" y="121" fill="#9CA3AF" font-size="13">🔍  Search resources, subjects, topics...</text>
+
+  <!-- Academic Subjects Section -->
+  <text x="16" y="160" fill="#1A1A2E" font-size="14" font-weight="bold">Academic Subjects</text>
+  <text x="300" y="160" fill="#1565C0" font-size="12" font-weight="600">See All</text>
+
+  <!-- Subject Cards Grid (2x2) -->
+  <rect x="16" y="172" width="156" height="64" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="16" y="172" width="4" height="64" rx="2" fill="#1565C0"/>
+  <text x="28" y="198" fill="#1A1A2E" font-size="13" font-weight="600">Mathematics</text>
+  <text x="28" y="218" fill="#6B7280" font-size="11">MATH · 3 Topics</text>
+
+  <rect x="188" y="172" width="156" height="64" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="188" y="172" width="4" height="64" rx="2" fill="#00695C"/>
+  <text x="200" y="198" fill="#1A1A2E" font-size="13" font-weight="600">Computer Science</text>
+  <text x="200" y="218" fill="#6B7280" font-size="11">CS · 4 Topics</text>
+
+  <rect x="16" y="246" width="156" height="64" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="16" y="246" width="4" height="64" rx="2" fill="#6A1B9A"/>
+  <text x="28" y="272" fill="#1A1A2E" font-size="13" font-weight="600">Physics</text>
+  <text x="28" y="292" fill="#6B7280" font-size="11">PHY · 3 Topics</text>
+
+  <rect x="188" y="246" width="156" height="64" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="188" y="246" width="4" height="64" rx="2" fill="#B71C1C"/>
+  <text x="200" y="272" fill="#1A1A2E" font-size="13" font-weight="600">Electronics</text>
+  <text x="200" y="292" fill="#6B7280" font-size="11">ELEC · 2 Topics</text>
+
+  <!-- Popular Resources Section -->
+  <text x="16" y="334" fill="#1A1A2E" font-size="14" font-weight="bold">⭐ Popular Resources</text>
+
+  <!-- Resource Card 1 -->
+  <rect x="16" y="346" width="328" height="96" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="28" y="358" width="56" height="20" rx="10" fill="#E3F2FD"/>
+  <text x="36" y="372" fill="#1565C0" font-size="10" font-weight="bold">VIDEO</text>
+  <text x="285" y="372" fill="#F59E0B" font-size="12">★ 5.0 (124)</text>
+  <text x="28" y="394" fill="#1A1A2E" font-size="13" font-weight="600">Introduction to Calculus — Khan Academy</text>
+  <rect x="28" y="408" width="80" height="20" rx="8" fill="#EBF4FF"/>
+  <text x="36" y="422" fill="#1565C0" font-size="11">Mathematics</text>
+  <rect x="114" y="408" width="60" height="20" rx="8" fill="#EBF4FF"/>
+  <text x="122" y="422" fill="#1565C0" font-size="11">Calculus</text>
+
+  <!-- Resource Card 2 -->
+  <rect x="16" y="452" width="328" height="96" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="28" y="464" width="56" height="20" rx="10" fill="#E3F2FD"/>
+  <text x="36" y="478" fill="#1565C0" font-size="10" font-weight="bold">VIDEO</text>
+  <text x="285" y="478" fill="#F59E0B" font-size="12">★ 4.8 (98)</text>
+  <text x="28" y="500" fill="#1A1A2E" font-size="13" font-weight="600">Data Structures Crash Course — freeCodeCamp</text>
+  <rect x="28" y="514" width="104" height="20" rx="8" fill="#EBF4FF"/>
+  <text x="36" y="528" fill="#1565C0" font-size="11">Computer Science</text>
+  <rect x="138" y="514" width="86" height="20" rx="8" fill="#EBF4FF"/>
+  <text x="146" y="528" fill="#1565C0" font-size="11">Data Structures</text>
+
+  <!-- Bottom Navigation Bar -->
+  <path d="M 0,580 L 360,580 L 360,610 Q 360,640 330,640 L 30,640 Q 0,640 0,610 Z" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="38" y="606" fill="#1565C0" font-size="18">🏠</text>
+  <text x="36" y="622" fill="#1565C0" font-size="10" font-weight="bold">Home</text>
+  
+  <text x="128" y="606" fill="#9CA3AF" font-size="18">🧭</text>
+  <text x="122" y="622" fill="#9CA3AF" font-size="10">Explore</text>
+
+  <text x="218" y="606" fill="#9CA3AF" font-size="18">➕</text>
+  <text x="214" y="622" fill="#9CA3AF" font-size="10">Submit</text>
+
+  <text x="306" y="606" fill="#9CA3AF" font-size="18">👤</text>
+  <text x="302" y="622" fill="#9CA3AF" font-size="10">Profile</text>
+</svg>

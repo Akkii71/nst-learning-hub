@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 640" width="360" height="640" style="background:#F5F7FA; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <rect x="0" y="0" width="360" height="640" rx="30" fill="#F5F7FA" stroke="#E5E7EB" stroke-width="4"/>
+  
+  <!-- Reviewer Header (Purple) -->
+  <path d="M 0,30 Q 0,0 30,0 L 330,0 Q 360,0 360,30 L 360,76 L 0,76 Z" fill="#7C3AED"/>
+  <text x="20" y="44" fill="#FFFFFF" font-size="16">←</text>
+  <text x="115" y="44" fill="#FFFFFF" font-size="17" font-weight="bold">Reviewer Portal</text>
+  <text x="100" y="60" fill="#DDD6FE" font-size="12">Pending Submissions Queue (1)</text>
+  <text x="325" y="44" fill="#FFFFFF" font-size="16">🔄</text>
+
+  <!-- Pending Submission Card -->
+  <rect x="16" y="92" width="328" height="230" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  
+  <!-- Top row: Status & Date -->
+  <rect x="28" y="106" width="60" height="20" rx="10" fill="#EDE9FE"/>
+  <text x="36" y="120" fill="#7C3AED" font-size="9" font-weight="bold">VIDEO</text>
+  <text x="258" y="120" fill="#9CA3AF" font-size="11">2026-11-23</text>
+
+  <!-- Title & Description -->
+  <text x="28" y="146" fill="#1A1A2E" font-size="14" font-weight="bold">Advanced Dynamic Programming</text>
+  <text x="28" y="166" fill="#6B7280" font-size="12">Comprehensive DP guide covering memoization and tabulation.</text>
+
+  <!-- Subject & Topic tags -->
+  <rect x="28" y="180" width="116" height="20" rx="6" fill="#EBF4FF"/>
+  <text x="36" y="194" fill="#1565C0" font-size="11">Computer Science</text>
+  <rect x="150" y="180" width="76" height="20" rx="6" fill="#EBF4FF"/>
+  <text x="158" y="194" fill="#1565C0" font-size="11">Algorithms</text>
+
+  <!-- Student Info -->
+  <text x="28" y="218" fill="#6B7280" font-size="11">Submitted by: <tspan font-weight="bold" fill="#1A1A2E">Akash Kumar</tspan> (Computer Science)</text>
+
+  <!-- URL Box -->
+  <rect x="28" y="228" width="304" height="28" rx="6" fill="#F5F7FA" stroke="#E5E7EB"/>
+  <text x="36" y="246" fill="#1565C0" font-size="11">🔗 https://youtube.com/watch?v=dp123</text>
+
+  <!-- Action Buttons: Approve (Green) / Reject (Red) -->
+  <rect x="28" y="268" width="144" height="38" rx="8" fill="#FEF2F2" stroke="#FEE2E2"/>
+  <text x="76" y="292" fill="#EF4444" font-size="13" font-weight="bold">✕ Reject</text>
+
+  <rect x="188" y="268" width="144" height="38" rx="8" fill="#22C55E"/>
+  <text x="232" y="292" fill="#FFFFFF" font-size="13" font-weight="bold">✓ Approve</text>
+
+  <!-- Info Notice -->
+  <rect x="16" y="340" width="328" height="60" rx="10" fill="#F5F3FF" stroke="#DDD6FE"/>
+  <text x="28" y="362" fill="#6D28D9" font-size="12" font-weight="bold">🛡️ Faculty Review Policy</text>
+  <text x="28" y="380" fill="#7C3AED" font-size="11">Approved resources immediately become discoverable to students.</text>
+</svg>

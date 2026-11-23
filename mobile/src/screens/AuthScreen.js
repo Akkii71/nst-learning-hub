@@ -102,7 +102,11 @@ export default function AuthScreen({ navigation }) {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Branding Banner */}
         <View style={styles.brandBox}>
           <View style={styles.iconCircle}>

@@ -170,7 +170,11 @@ export default function SubmitScreen() {
         <Text style={styles.headerSubtitle}>Share a syllabus resource with fellow NST students</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Title */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Resource Title *</Text>
