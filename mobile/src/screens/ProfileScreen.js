@@ -155,6 +155,25 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
+        {/* Reviewer Portal Access (Reviewers only) */}
+        {isReviewer && (
+          <TouchableOpacity
+            style={styles.reviewerPortalCard}
+            onPress={() => navigation.navigate('ReviewerDashboard')}
+          >
+            <View style={styles.reviewerPortalIcon}>
+              <Ionicons name="shield-checkmark" size={24} color="#7C3AED" />
+            </View>
+            <View style={styles.reviewerPortalTextWrap}>
+              <Text style={styles.reviewerPortalTitle}>Reviewer Management Portal</Text>
+              <Text style={styles.reviewerPortalSubtitle}>
+                Review, approve, or reject student submissions
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#7C3AED" />
+          </TouchableOpacity>
+        )}
+
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
@@ -253,6 +272,12 @@ export default function ProfileScreen({ navigation }) {
                   <Text style={styles.submissionMeta}>
                     {sub.resource?.subject} · {sub.resource?.topic} · {(sub.resource?.type || '').toUpperCase()}
                   </Text>
+                  {sub.note && (
+                    <View style={styles.noteBox}>
+                      <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.textSecondary} />
+                      <Text style={styles.noteText}>Note: {sub.note}</Text>
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -380,6 +405,39 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   submissionMeta: { fontSize: 12, color: colors.textSecondary },
+  noteBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  noteText: { fontSize: 11, color: '#92400E' },
+  reviewerPortalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F3FF',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#DDD6FE',
+    gap: 12,
+  },
+  reviewerPortalIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EDE9FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewerPortalTextWrap: { flex: 1 },
+  reviewerPortalTitle: { fontSize: 15, fontWeight: '700', color: '#6D28D9' },
+  reviewerPortalSubtitle: { fontSize: 12, color: '#7C3AED', marginTop: 2 },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',

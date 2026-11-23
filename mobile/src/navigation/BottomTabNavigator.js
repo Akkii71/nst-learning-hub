@@ -8,6 +8,7 @@ import SubmitScreen from '../screens/SubmitScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ResourceDetailsScreen from '../screens/ResourceDetailsScreen';
 import AuthScreen from '../screens/AuthScreen';
+import ReviewerDashboardScreen from '../screens/ReviewerDashboardScreen';
 import colors from '../styles/colors';
 
 const Tab = createBottomTabNavigator();
@@ -44,12 +45,13 @@ function SubmitStack() {
   );
 }
 
-// Profile stack: Profile → Auth
+// Profile stack: Profile → Auth, ReviewerDashboard
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Auth" component={AuthScreen} />
+      <Stack.Screen name="ReviewerDashboard" component={ReviewerDashboardScreen} />
       <Stack.Screen name="ResourceDetails" component={ResourceDetailsScreen} />
     </Stack.Navigator>
   );

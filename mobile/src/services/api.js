@@ -121,6 +121,39 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  async getMySubmissions() {
+    const res = await fetch(`${API_BASE_URL}/submissions/my`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // --- Reviewer Workflow ---
+  async getPendingSubmissions() {
+    const res = await fetch(`${API_BASE_URL}/submissions/pending`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  async approveSubmission(id, note) {
+    const res = await fetch(`${API_BASE_URL}/submissions/${id}/approve`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ note }),
+    });
+    return handleResponse(res);
+  },
+
+  async rejectSubmission(id, note) {
+    const res = await fetch(`${API_BASE_URL}/submissions/${id}/reject`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ note }),
+    });
+    return handleResponse(res);
+  },
 };
 
 export default api;
