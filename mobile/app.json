@@ -11,6 +11,9 @@
     },
     "android": {
       "package": "com.nstlearninghub.app"
-    }
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }
